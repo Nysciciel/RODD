@@ -11,8 +11,8 @@ include("temp")
 rm("temp")
 
 
-@variable(model, x[1:n,1:m], Bin) # Le site est protégé
-@variable(model, y[1:n,1:m], Bin) # Le site est central
+@variable(model, x[1:n,1:m], Bin)
+@variable(model, y[1:n,1:m])
 
 @constraint(model, sum(x) <= Amax)
 @constraint(model, sum(x) >= Amin)
@@ -21,7 +21,7 @@ rm("temp")
 
 D = sqrt(m^2 + n^2)
 @constraint(model, [i=1:n,j=1:m], y[i,j] <= D*x[i,j])
-@constraint(model, [i=1:n,j=1:m,k=union(1:i-1,(i+1):n),l=union(1:j-1,(j+1):m)],
+@constraint(model, [i=1:n,j=1:m,k=union(1:(i-1),(i+1):n),l=union(1:(j-1),(j+1):m)],
     y[i,j] <= sqrt((i-k)^2+(j-l)^2)*x[k,l] + (1-x[k,l])*D)
 
 @objective(model, Max, sum(y))
