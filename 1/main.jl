@@ -1,3 +1,4 @@
+#cd("D:\\M2\\RODD\\RODD\\1")
 using CPLEX
 using JuMP
 
