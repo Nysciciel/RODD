@@ -10,6 +10,7 @@ close(io)
 include("temp")
 rm("temp")
 
+# set_time_limit_sec(model, 30)
 
 @variable(model, x[1:n,1:m], Bin)
 @variable(model, y[1:n,1:m])
@@ -20,8 +21,9 @@ rm("temp")
 @constraint(model, sum(map(*,x,reduce(vcat,transpose.(c)))) <= B)
 
 D = sqrt(m^2 + n^2)
+@constraint(model, [i=1:n,j=1:m], y[i,j] <= D)
 @constraint(model, [i=1:n,j=1:m], y[i,j] <= D*x[i,j])
-@constraint(model, [i=1:n,j=1:m,k=union(1:(i-1),(i+1):n),l=union(1:(j-1),(j+1):m)],
+@constraint(model, [i=1:n,j=1:m,k=1:n,l=1:m;i!=k || j!=l],
     y[i,j] <= sqrt((i-k)^2+(j-l)^2)*x[k,l] + (1-x[k,l])*D)
 
 @objective(model, Max, sum(y))
