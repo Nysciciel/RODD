@@ -43,9 +43,9 @@ if has_values(model)
     print(solution_summary(model, verbose=true))
     for i in 1:n
         for j in 1:m
-            if value.(y[i, j])==1
+            if round(value(y[i, j]))==1
                 print("O")
-            elseif value.(x[i, j])==1
+            elseif round(value(x[i, j]))==1
                 print("o")
             else
                 print("_")
