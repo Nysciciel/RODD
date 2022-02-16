@@ -18,7 +18,6 @@ function solve_PL(lambda)
 	@constraint(model, sum(map(*,x,reduce(vcat,transpose.(10*c)))) <= B)
 	@constraint(model, [i=1:n,j=1:m,k=1:n,l=1:m; i!=k || j!=l], y[i,j, k ,l] <= x[k,l])
 	@constraint(model, [i=1:n,j=1:m], sum(y[i,j,k,l] for k in 1:n, l in 1:m if (i!=k || j!=l)) == x[i,j] )
-	#@constraint(model, [i=1:n,j=1:m], y[i,j,i,j] == 0)
 
 	@objective(model, Min, f(x,y) - lambda*g(x,y) )
 
