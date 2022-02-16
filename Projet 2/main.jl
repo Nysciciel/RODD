@@ -1,14 +1,8 @@
-#cd("D:\\M2\\RODD\\RODD\\1")
 using CPLEX
 using JuMP
 
+include("MinFragmentation_opl.dat")
 model = Model(CPLEX.Optimizer)
-
-io = open("temp", "w")
-write(io, replace(read(open("MinFragmentation_opl.dat"), String), ";"=>""))
-close(io)
-include("temp")
-rm("temp")
 
 # set_time_limit_sec(model, 30)
 
@@ -21,6 +15,7 @@ rm("temp")
 @constraint(model, sum(map(*,x,reduce(vcat,transpose.(c)))) <= B)
 
 D = sqrt(m^2 + n^2)
+
 @constraint(model, [i=1:n,j=1:m], y[i,j] <= D)
 @constraint(model, [i=1:n,j=1:m], y[i,j] <= D*x[i,j])
 @constraint(model, [i=1:n,j=1:m,k=1:n,l=1:m;i!=k || j!=l],
