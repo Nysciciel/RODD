@@ -1,0 +1,7 @@
+alpha = [0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
+x = nothing
+y = nothing
+cout = Inf
+time = 0.0
+nb_noeuds = 0
+surv_proba =[0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
