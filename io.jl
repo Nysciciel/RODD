@@ -1,6 +1,7 @@
 #print( prod( (e->get(Dict(1=>"■ ",0=>"□ ",-1=>"\n"),e," ") ).([Int.(round.(value.(x))) .-ones(Int,size(x,1),1) ]') ) )
 
 function affichage(x,y=zeros(Int,size(x)))
+
     matrice_x = [Int.(round.(x)) .-ones(Int,size(x,1),1) ]'
     dic = Dict(1=>"■ ",0=>"□ ",-1=>"\n")
     matrice_x = (e->get(dic,e," ") ).(matrice_x)
@@ -8,7 +9,7 @@ function affichage(x,y=zeros(Int,size(x)))
     #fusion des matrices
     for i in 1:size(x,1)
         for j in 1:size(x,2)
-            matrice[j,i] = y[i,j]==1 ? "x " : matrice_x[j,i]
+            matrice[j,i] = round(y[i,j])==1 ? "x " : matrice_x[j,i]
         end
     end
     print( prod( matrice) )
@@ -58,7 +59,7 @@ function results_tex()
             println(path)
             include(path)
 
-            print(fout, "\n\\hline\\hline\n", replace(file, "_" => "\\_"), " &\$\\alpha\$&")
+            print(fout, "\\hline\\hline\n", replace(file, "_" => "\\_"), " &\$\\alpha\$&")
             for α in alpha
                 print(fout, α, " &")
             end
