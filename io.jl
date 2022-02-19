@@ -30,46 +30,81 @@ end
 """
 Create a latex file which contains an array with the results
 """
-function results_tex()
+function results_tex(filename::String)
     println("--------- RESULTS TEX  ---------")
 
     # Open the latex output file
-    fout = open("instances_1_4.tex", "w")
+    fout = open(filename*".tex", "w")
 
     # Print the latex file output
     println(fout, raw"""\documentclass[main.tex]{subfiles}
+    
 	\begin{document}""")
 
     header = raw"""
-	\begin{center}
-	\begin{tabular}{|l||l|c|c|c|c|c|c||c|c|c|}
-    \hline
-    \textbf{Instance}&\textbf{Espèce}&1&2&3&4&5&6&\textbf{Temps(s)}&\textbf{Noeuds}&\textbf{Coût}\\\\"""
+\begin{center}
+\begin{tabular}{|c||r|c|c|c|c|c|c||c|c|c|}
+\hline
+\textbf{Taille instance}&\textbf{Espèce}&1&2&3&4&5&6&\textbf{Temps(s)}&\textbf{Noeuds}&\textbf{Coût}\\
+\hline
+"""
 
-    footer = raw"""\hline
-    \end{tabular}
-	\end{center}
-	"""
+    footer = raw"""
+\end{tabular}
+\end{center}
+"""
     println(fout, header)
 
-    # For each file in the result folder
-    for file in readdir("res")
-        path = "res/"*file
-        if isfile(path)
-            println(path)
-            include(path)
+    maxInstancePerPage = 6
+    id = 1
 
-            print(fout, "\\hline\\hline\n", replace(file, "_" => "\\_"), " &\$\\alpha\$&")
-            for α in alpha
-                print(fout, α, " &")
+    instances = ["" for i in 10:50]
+    # For each file in the result folder
+    for instance in 10:50
+        
+        println(fout, "\\hline")
+        print(fout, "\\multirow{8}{*}{", instance, "\$\\times\$ ", instance, "} &")
+
+        for i in 1:4
+            path = "res/instance_"*string(instance)*"_"*string(i)*".txt"
+            if isfile(path)
+                println(path)
+                include(path)
+                # taille = split(file, "_")[2]
+                # alpha  = split(file, "_")[3]
+                if i > 1
+                    print(fout, " &")
+                end
+                print(fout, " \$\\alpha\$ &")
+                for α in alpha
+                    print(fout, α, " &")
+                end
+                print(fout, "\\multirow{2}{*}{",time, "} &\\multirow{2}{*}{", nb_noeuds, "} & \\multirow{2}{*}{")
+                if cout == Inf
+                    println(fout, "-}\\\\")
+                else
+                    println(fout, cout, "}\\\\")
+                end
+
+                print(fout, " &Proba survie &")
+                if surv_proba == zeros(length(surv_proba))
+                    print(fout, " - & - & - & - & - & - &")
+                else     
+                    for k in 1:length(surv_proba)
+                        print(fout, surv_proba[k], " &")
+                    end
+                end
             end
-            print(fout, time, " &", nb_noeuds, " &", cout, "\\\\\n")
-            print(fout, "&Probabilités de survie &")
-            for k in 1:length(surv_proba)
-                print(fout, surv_proba[k], " &")
-            end
-            println(fout, "& &\\\\")
+            println(fout, " & & &\n\\cline{2-11}")
         end
+        println(fout, "\\hline")
+        
+        if rem(id, maxInstancePerPage) == 0
+            println(fout, footer, "\\newpage")
+            println(fout, header)
+        end
+        id += 1
+        
     end
 
 

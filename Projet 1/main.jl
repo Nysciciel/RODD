@@ -51,7 +51,7 @@ function solve_model(proba, c, alpha, p, K)
         x = value.(x)
         y = value.(y)
         affichage(value.(x), value.(y) )
-        cout = round(objective_value(model),digits=2)
+        cout = round(Int,objective_value(model))
         println("Fonction objetif : ", cout)
         
         #Probabilités de survie
@@ -84,8 +84,9 @@ function instance_1_4()
     include("ReserveNaturelles_opl.dat")
     K = p + q #Nombre d'espèces à protéger 
 
-    #alpha_k = 0.5 pour tout k
+    #1ère instance
     println("------------------- Instance 1 ------------------")
+    alpha = [0.5,0.5,0.5,0.5,0.5,0.5]
     x,y,cout,time,noeuds, surv_proba = solve_model(proba, c, alpha, p, K)
     write_solution(alpha,x,y,cout,time,noeuds,surv_proba, "instance_1")
 
@@ -110,11 +111,11 @@ function instance_1_4()
     results_tex()
 end
 
-function generation_instances(m,n, K::Int)
-    p = rand(1:K)
-    alpha_rare = round(rand(0.5:0.1:0.9),digits=2)
-    alpha_commun = round(rand(0.5:0.1:0.9),digits=2)
-    alpha = [   alpha_rare*ones(p,1)' alpha_commun*ones(K-p,1)' ]
+function generation_instances(m,n,p,K::Int,alpha)
+    # p = rand(1:K)
+    # alpha_rare = round(rand(0.5:0.1:0.9),digits=2)
+    # alpha_commun = round(rand(0.5:0.1:0.9),digits=2)
+    # alpha = [   alpha_rare*ones(p,1)' alpha_commun*ones(K-p,1)' ]
     proba =  [ [ [0.0 for i in 1:n] for j in 1:m] for k in 1:K]
     for k in 1:K
     #Pour chaque espèce rare(commune), on sélectionne 5-10%(10-15%)
@@ -126,12 +127,32 @@ function generation_instances(m,n, K::Int)
         end
     end
     c = [ [rand(1:n) for i in 1:n] for j in 1:m]
-    return proba, c, alpha, p
+    return proba, c
 end
+
+# instance_1_4()
 
 m = 10
 n = 10
+p = 3
 K = 6
+alphas = [  [0.5,0.5,0.5,0.5,0.5,0.5],
+            [0.9,0.9,0.9,0.5,0.5,0.5],
+            [0.5,0.5,0.5,0.9,0.9,0.9],
+            [0.8,0.8,0.8,0.6,0.6,0.6]]
 # Random.seed!(0002)
-proba, c, alpha, p = generation_instances(m,n,K)
-x,y,cout,time,noeuds, surv_proba = solve_model(proba,c,alpha,p,K)
+# proba, c, alpha, p = generation_instances(m,n,K)
+# x,y,cout,time,noeuds, surv_proba = solve_model(proba,c,alpha,p,K)
+
+function comportement()
+    for m in 10:50
+        for α in 1:length(alphas)
+            proba, c = generation_instances(m,m,p,K,alphas[α])
+            x,y,cout,time,noeuds, surv_proba = solve_model(proba,c,alphas[α],p,K)
+            write_solution(alphas[α],x,y,cout,time,noeuds,surv_proba, "instance_"*string(m)*"_"*string(α))
+        end
+    end
+    results_tex("instances_10_50")
+end
+# comportement()
+results_tex("instances_10_50")
