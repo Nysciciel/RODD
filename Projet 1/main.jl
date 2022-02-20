@@ -1,21 +1,13 @@
-include("../io.jl")
+include("io.jl")
+include("../utilitaire.jl")
 
 using CPLEX
 using JuMP
 using Random
 
-function neighbours(i::Int, j::Int)
-    """
-    Renvoie les cases voisines de (i,j) elle même incluse
-    """
-    i_m = max(1, i-1)
-    j_m = max(1, j-1)
-    i_p = min(n, i+1)
-    j_p = min(m, j+1)
-    return [(k,l) for k in i_m:i_p for l in j_m:j_p]
-end
 
-function solve_model(proba, c, alpha, p, K)
+
+function solve_model(m,n,proba::Vector{Vector{Vector{Float64}}}, c::Vector{Vector{Int}}, alpha::Vector{Float64}, p::Int, K::Int, verbose::Bool=false)
     rare = [species <= p for species in 1:K] # 1 si espèce rare
     model = Model(CPLEX.Optimizer)
     set_silent(model)
@@ -28,11 +20,11 @@ function solve_model(proba, c, alpha, p, K)
         sum((rare[k] ? y[i,j] : x[i,j])*log(1-proba[k][i][j]) for i in 1:n, j in 1:m) <= log(1-alpha[k]))
 
     #Si un voisin de (i,j) n'est pas protégé, alors (i,j) n'est pas centrale
-    voisins_1 = @constraint(model, [i in 1:n, j in 1:m, (k,l) in neighbours(i,j)], 
+    voisins_1 = @constraint(model, [i in 1:n, j in 1:m, (k,l) in neighbours(i,j,n,m)], 
                 base_name = "voisins_1", y[i,j] <= x[k,l])
     #Si tous les voisins de (i,j) sont protégés, alors (i,j) est centrale
     voisins_2 = @constraint(model, [i in 1:n, j in 1:m], base_name="voisins_2", 
-                y[i,j] >= sum(x[k,l] for (k,l) in neighbours(i,j)) - 8)#length(neighbours(i,j))+1)
+                y[i,j] >= sum(x[k,l] for (k,l) in neighbours(i,j,n,m)) - 8)#length(neighbours(i,j))+1)
     
 
     # Les bords ne peuvent pas être centraux
@@ -41,81 +33,99 @@ function solve_model(proba, c, alpha, p, K)
     @constraint(model,[i in 1:n], y[i,1]==0)
     @constraint(model,[i in 1:n], y[i,m]==0)
 
+    set_silent(model)
     optimize!(model)
-    time = round(solve_time(model), digits=2)
-    println("solve_time = ", time)
+
+    resolution_time = round(solve_time(model), digits=2)
     noeuds = 0#node_count(model)
-    println("Noeuds : ", noeuds )
+
+    if verbose
+        unset_silent(model)
+        println("resolution_time = ", resolution_time)
+        println("Noeuds : ", noeuds )
+    end
 
     if has_values(model)
         x = value.(x)
         y = value.(y)
-        affichage(value.(x), value.(y) )
-        cout = round(Int,objective_value(model))
-        println("Fonction objetif : ", cout)
         
+        cout = round(Int,objective_value(model))
+
         #Probabilités de survie
         surv_proba = [ round(1-prod(1-proba[k][i][j]*value( rare[k] ? y[i,j] : x[i,j]) for i in 1:n, j in 1:m ),digits=2 ) for k in 1:K ]
-        println("aplha = \t", alpha)
-        println("proba de survie : ", surv_proba)
+        
+        if verbose
+            println("Fonction objetif : ", cout)
+            affichage(x, y)
+
+            println("aplha = \t", alpha)
+            println("proba de survie : ", surv_proba)
+        end
     else #On affiche les contraintes en conflit
-        conflict_constraint_list = ConstraintRef[]
-        println(compute_conflict!(model))
-        for (F, S) in list_of_constraint_types(model)
-            for con in all_constraints(model, F, S)
-                if MOI.get(model, MOI.ConstraintConflictStatus(), con) == MOI.IN_CONFLICT
-                    push!(conflict_constraint_list, con)
-                    println(con)
+
+        if verbose
+            println("No solution")
+            conflict_constraint_list = ConstraintRef[]
+            println(compute_conflict!(model))
+            for (F, S) in list_of_constraint_types(model)
+                for con in all_constraints(model, F, S)
+                    if MOI.get(model, MOI.ConstraintConflictStatus(), con) == MOI.IN_CONFLICT
+                        push!(conflict_constraint_list, con)
+                        println(con)
+                    end
                 end
             end
         end
-        println("No solution")
         x = nothing
         y = nothing
         cout = Inf
         surv_proba = zeros(K)
     end
-    return x,y,cout,time,noeuds, surv_proba 
+    
+    return x,y,cout,resolution_time,noeuds, surv_proba 
 end
 
 
-function instance_1_4()
+function instance_1_4(verbose::Bool=false)
     #Fichier de données : m, n, p, q, alpha, proba
     include("ReserveNaturelles_opl.dat")
     K = p + q #Nombre d'espèces à protéger 
 
     #1ère instance
-    println("------------------- Instance 1 ------------------")
+    if verbose
+        println("------------------- Instance 1 ------------------")
+    end
     alpha = [0.5,0.5,0.5,0.5,0.5,0.5]
-    x,y,cout,time,noeuds, surv_proba = solve_model(proba, c, alpha, p, K)
-    write_solution(alpha,x,y,cout,time,noeuds,surv_proba, "instance_1")
+    x,y,cout,resolution_time,noeuds, surv_proba = solve_model(proba, c, alpha, p, K, verbose)
+    write_solution(x,y,cout,resolution_time,noeuds,surv_proba, 1, m)
 
     # #2ème instance
-    println("------------------- Instance 2 ------------------")
+    if verbose
+        println("------------------- Instance 2 ------------------")
+    end
     alpha = [0.9,0.9,0.9,0.5,0.5,0.5]
-    x,y,cout,time,noeuds, surv_proba = solve_model(proba, c, alpha, p, K)
-    write_solution(alpha,x,y,cout,time,noeuds,surv_proba, "instance_2")
+    x,y,cout,resolution_time,noeuds, surv_proba = solve_model(proba, c, alpha, p, K, verbose)
+    write_solution(x,y,cout,resolution_time,noeuds,surv_proba, 2,m)
 
     # #3ème instance
-    println("------------------- Instance 3 ------------------")
+    if verbose
+        println("------------------- Instance 3 ------------------")
+    end
     alpha = [0.5,0.5,0.5,0.9,0.9,0.9]
-    x,y,cout,time,noeuds, surv_proba = solve_model(proba, c, alpha, p, K)
-    write_solution(alpha,x,y,cout,time,noeuds,surv_proba, "instance_3")
+    x,y,cout,resolution_time,noeuds, surv_proba = solve_model(proba, c, alpha, p, K, verbose)
+    write_solution(x,y,cout,resolution_time,noeuds,surv_proba, 3,m)
 
     # #4ème instance
-    println("------------------- Instance 4 ------------------")
+    if verbose
+        println("------------------- Instance 4 ------------------")
+    end
     alpha = [0.8,0.8,0.8,0.6,0.6,0.6]
-    x,y,cout,time,noeuds, surv_proba = solve_model(proba, c, alpha, p, K)
-    write_solution(alpha,x,y,cout,time,noeuds,surv_proba, "instance_4")
+    x,y,cout,resolution_time,noeuds, surv_proba = solve_model(proba, c, alpha, p, K, verbose)
+    write_solution(x,y,cout,resolution_time,noeuds,surv_proba, 4,m)
 
-    results_tex("instances_1_4")
 end
 
 function generation_instances(m,n,p,K::Int,alpha)
-    # p = rand(1:K)
-    # alpha_rare = round(rand(0.5:0.1:0.9),digits=2)
-    # alpha_commun = round(rand(0.5:0.1:0.9),digits=2)
-    # alpha = [   alpha_rare*ones(p,1)' alpha_commun*ones(K-p,1)' ]
     proba =  [ [ [0.0 for i in 1:n] for j in 1:m] for k in 1:K]
     for k in 1:K
     #Pour chaque espèce rare(commune), on sélectionne 5-10%(10-15%)
@@ -130,30 +140,33 @@ function generation_instances(m,n,p,K::Int,alpha)
     return proba, c
 end
 
-# instance_1_4()
 
-m = 10
-n = 10
+function comportement(alphas::Vector{Vector{Float64}}, p::Int, K::Int, verbose::Bool=false)
+    for α in 1:length(alphas)
+        result_folder = "res/alpha_"*string(α)
+        if verbose
+            println("--------------------------- ", α, " ---------------------------" )
+        end
+        for m in 10:50
+            if verbose
+                println("---------------------- ", m, " -----------------------" )
+            end
+            proba, c = generation_instances(m,m,p,K,alphas[α])
+            x,y,cout,resolution_time,noeuds, surv_proba = solve_model(m,m,proba,c,alphas[α],p,K,verbose)
+            write_solution(x,y,cout,resolution_time,noeuds,surv_proba, α,m)
+        end
+        
+        filename = "res/results_alpha_" * string(α) * "_instances_10_50"
+        results_tex(result_folder, filename, alphas[α])
+    end
+    
+end
+
 p = 3
 K = 6
 alphas = [  [0.5,0.5,0.5,0.5,0.5,0.5],
             [0.9,0.9,0.9,0.5,0.5,0.5],
             [0.5,0.5,0.5,0.9,0.9,0.9],
             [0.8,0.8,0.8,0.6,0.6,0.6]]
-# Random.seed!(0002)
-# proba, c, alpha, p = generation_instances(m,n,K)
-# x,y,cout,time,noeuds, surv_proba = solve_model(proba,c,alpha,p,K)
 
-function comportement()
-    for α in 1:length(alphas)
-        for m in 10:50
-            proba, c = generation_instances(m,m,p,K,alphas[α])
-            x,y,cout,time,noeuds, surv_proba = solve_model(proba,c,alphas[α],p,K)
-            write_solution(x,y,cout,time,noeuds,surv_proba, α,m)
-        end
-        results_tex(α, 10, 50)
-    end
-    
-end
-comportement()
-# results_tex(1, 10, 50)
+comportement(alphas, p, K, true)
