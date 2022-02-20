@@ -1,21 +1,13 @@
-include("../io.jl")
+include("io.jl")
+include("../utilitaire.jl")
 
 using CPLEX
 using JuMP
 using Random
 
-function neighbours(i::Int, j::Int)
-    """
-    Renvoie les cases voisines de (i,j) elle même incluse
-    """
-    i_m = max(1, i-1)
-    j_m = max(1, j-1)
-    i_p = min(n, i+1)
-    j_p = min(m, j+1)
-    return [(k,l) for k in i_m:i_p for l in j_m:j_p]
-end
 
-function solve_model(proba, c, alpha, p, K)
+
+function solve_model(m,n,proba::Vector{Vector{Vector{Float64}}}, c::Vector{Vector{Int}}, alpha::Vector{Float64}, p::Int, K::Int, verbose::Bool=false)
     rare = [species <= p for species in 1:K] # 1 si espèce rare
     model = Model(CPLEX.Optimizer)
     set_silent(model)
@@ -28,11 +20,11 @@ function solve_model(proba, c, alpha, p, K)
         sum((rare[k] ? y[i,j] : x[i,j])*log(1-proba[k][i][j]) for i in 1:n, j in 1:m) <= log(1-alpha[k]))
 
     #Si un voisin de (i,j) n'est pas protégé, alors (i,j) n'est pas centrale
-    voisins_1 = @constraint(model, [i in 1:n, j in 1:m, (k,l) in neighbours(i,j)], 
+    voisins_1 = @constraint(model, [i in 1:n, j in 1:m, (k,l) in neighbours(i,j,n,m)], 
                 base_name = "voisins_1", y[i,j] <= x[k,l])
     #Si tous les voisins de (i,j) sont protégés, alors (i,j) est centrale
     voisins_2 = @constraint(model, [i in 1:n, j in 1:m], base_name="voisins_2", 
-                y[i,j] >= sum(x[k,l] for (k,l) in neighbours(i,j)) - 8)#length(neighbours(i,j))+1)
+                y[i,j] >= sum(x[k,l] for (k,l) in neighbours(i,j,n,m)) - 8)#length(neighbours(i,j))+1)
     
 
     # Les bords ne peuvent pas être centraux
@@ -47,8 +39,8 @@ function solve_model(proba, c, alpha, p, K)
     end
 
     optimize!(model)
-    time = round(solve_time(model), digits=2)
-    println("solve_time = ", time)
+
+    resolution_time = round(solve_time(model), digits=2)
     noeuds = 0#node_count(model)
 
     if verbose
@@ -59,21 +51,25 @@ function solve_model(proba, c, alpha, p, K)
     if has_values(model)
         x = value.(x)
         y = value.(y)
-        affichage(value.(x), value.(y) )
-        cout = round(Int,objective_value(model))
-        println("Fonction objetif : ", cout)
         
+        cout = round(Int,objective_value(model))
+
         #Probabilités de survie
         surv_proba = [ round(1-prod(1-proba[k][i][j]*value( rare[k] ? y[i,j] : x[i,j]) for i in 1:n, j in 1:m ),digits=2 ) for k in 1:K ]
-        println("aplha = \t", alpha)
-        println("proba de survie : ", surv_proba)
+        
+        if verbose
+            println("Fonction objetif : ", cout)
+            affichage(x, y)
+
+            println("aplha = \t", alpha)
+            println("proba de survie : ", surv_proba)
+        end
     else #On affiche les contraintes en conflit
 
         if verbose
             println("No solution")
             conflict_constraint_list = ConstraintRef[]
             println(compute_conflict!(model))
-            
             for (F, S) in list_of_constraint_types(model)
                 for con in all_constraints(model, F, S)
                     if MOI.get(model, MOI.ConstraintConflictStatus(), con) == MOI.IN_CONFLICT
@@ -83,18 +79,18 @@ function solve_model(proba, c, alpha, p, K)
                 end
             end
         end
-        println("No solution")
         x = nothing
         y = nothing
         cout = Inf
         
         surv_proba = zeros(K)
     end
-    return x,y,cout,time,noeuds, surv_proba 
+    
+    return x,y,cout,resolution_time,noeuds, surv_proba 
 end
 
 
-function instance_1_4()
+function instance_1_4(verbose::Bool=false)
     #Fichier de données : m, n, p, q, alpha, proba
     include("ReserveNaturelles_opl.dat")
     K = p + q #Nombre d'espèces à protéger 
@@ -127,7 +123,6 @@ function generation_instances(m,n,p,K::Int)
     return proba, c
 end
 
-# instance_1_4()
 
 function comportement(alphas::Vector{Vector{Float64}}, p::Int, K::Int, verbose::Bool=false)
     for α in 1:length(alphas)
@@ -156,16 +151,5 @@ alphas = [  [0.5,0.5,0.5,0.5,0.5,0.5],
             [0.9,0.9,0.9,0.5,0.5,0.5],
             [0.5,0.5,0.5,0.9,0.9,0.9],
             [0.8,0.8,0.8,0.6,0.6,0.6]]
-# Random.seed!(0002)
-# proba, c, alpha, p = generation_instances(m,n,K)
-# x,y,cout,time,noeuds, surv_proba = solve_model(proba,c,alpha,p,K)
 
-# comportement(alphas, p, K, true)
-# for α in 1:4
-#     result_folder = "res/alpha_"*string(α)
-#     filename = "res/results_alpha_" * string(α) * "_instances_10_50"
-#     results_tex(result_folder, filename, alphas[α])
-# end
-
-
-instance_1_4()
+comportement(alphas, p, K, true)
