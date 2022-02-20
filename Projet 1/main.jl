@@ -108,7 +108,7 @@ function instance_1_4()
     x,y,cout,time,noeuds, surv_proba = solve_model(proba, c, alpha, p, K)
     write_solution(alpha,x,y,cout,time,noeuds,surv_proba, "instance_4")
 
-    results_tex()
+    results_tex("instances_1_4")
 end
 
 function generation_instances(m,n,p,K::Int,alpha)
@@ -145,14 +145,15 @@ alphas = [  [0.5,0.5,0.5,0.5,0.5,0.5],
 # x,y,cout,time,noeuds, surv_proba = solve_model(proba,c,alpha,p,K)
 
 function comportement()
-    for m in 10:50
-        for α in 1:length(alphas)
+    for α in 1:length(alphas)
+        for m in 10:50
             proba, c = generation_instances(m,m,p,K,alphas[α])
             x,y,cout,time,noeuds, surv_proba = solve_model(proba,c,alphas[α],p,K)
-            write_solution(alphas[α],x,y,cout,time,noeuds,surv_proba, "instance_"*string(m)*"_"*string(α))
+            write_solution(x,y,cout,time,noeuds,surv_proba, α,m)
         end
+        results_tex(α, 10, 50)
     end
-    results_tex("instances_10_50")
+    
 end
-# comportement()
-results_tex("instances_10_50")
+comportement()
+# results_tex(1, 10, 50)
