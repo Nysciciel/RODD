@@ -1,6 +1,6 @@
 x = nothing
 y = nothing
 cout = Inf
-resolution_time = 0.01
+resolution_time = 0.0
 nb_noeuds = 0
 surv_proba =[0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
