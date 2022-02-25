@@ -8,7 +8,7 @@ using Random
 
 
 function solve_model(m,n,proba::Vector{Vector{Vector{Float64}}}, c::Vector{Vector{Int}}, alpha::Vector{Float64}, p::Int, K::Int, verbose::Bool=false)
-    rare = [species <= p for species in 1:K] # 1 si espèce rare
+    rare = [species ≤ p for species in 1:K] # 1 si espèce rare
     model = Model(CPLEX.Optimizer)
     set_silent(model)
     x = @variable(model, x[1:n,1:m], Bin) # Le site est protégé
@@ -41,7 +41,7 @@ function solve_model(m,n,proba::Vector{Vector{Vector{Float64}}}, c::Vector{Vecto
     optimize!(model)
 
     resolution_time = round(solve_time(model), digits=2)
-    noeuds = 0#node_count(model)
+    noeuds = node_count(model)
 
     if verbose
         println("resolution_time = ", resolution_time)
@@ -136,7 +136,7 @@ function comportement(alphas::Vector{Vector{Float64}}, p::Int, K::Int, verbose::
                 println("---------------------- ", m, " -----------------------" )
             end
             proba, c = generation_instances(m,m,p,K)
-            x,y,cout,resolution_time,noeuds, surv_proba = solve_model(m,m,proba,c,alphas[α],p,K,verbose)
+            x,y,cout,resolution_time,noeuds, surv_proba = solve_model(m,m,proba,c,alphas[α],p,K)
             write_solution(x,y,cout,resolution_time,noeuds,surv_proba, α,m)
         end
         
@@ -153,7 +153,7 @@ alphas = [  [0.5,0.5,0.5,0.5,0.5,0.5],
             [0.5,0.5,0.5,0.9,0.9,0.9],
             [0.8,0.8,0.8,0.6,0.6,0.6]]
 
-# comportement(alphas, p, K, true)
+comportement(alphas, p, K, true)
 # for α in 1:4
 #     result_folder = "res/alpha_"*string(α)
 #     filename = "res/results_alpha_" * string(α) * "_instances_10_50"
@@ -161,4 +161,4 @@ alphas = [  [0.5,0.5,0.5,0.5,0.5,0.5],
 # end
 
 
-instance_1_4()
+# instance_1_4(true)
