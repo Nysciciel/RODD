@@ -31,5 +31,5 @@ model = Model(CPLEX.Optimizer)
 @constraint(model, [t=1:T-R], sum( (e[m]-E)*x[t_,m] for m in 1:M, t_ in t:t+R) ≤ 0 )
 
 optimize!(model)
-
-groupedbar(value.(x))
+modes = ["Mode "*string(m) for m in 1:M]
+groupedbar( value.(x) , bar_position=:stack, label = [reshape(modes,(1,M)) ])
