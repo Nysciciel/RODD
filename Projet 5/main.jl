@@ -32,4 +32,22 @@ model = Model(CPLEX.Optimizer)
 
 optimize!(model)
 modes = ["Mode "*string(m) for m in 1:M]
-groupedbar( value.(x) , bar_position=:stack, label = [reshape(modes,(1,M)) ])
+
+#pyplot()
+#p = groupedbar( [ value.(s) value.(x)] , bar_position=:stack, label = ["Stocks" reshape(modes,(1,M)) ])
+p = groupedbar( value.(x) , bar_position=:stack, label = reshape(modes,(1,M)) )
+
+ys=[]
+xs=[]
+list_of_xs = 0.5:1:T+0.5
+for i in 1:length(d)
+    append!(ys,d[i])
+    append!(ys,d[i])
+    append!(ys,NaN)
+    append!(xs,list_of_xs[i])
+    append!(xs,list_of_xs[i+1])
+    append!(xs,NaN)
+
+end
+
+scatter(p, xs,  ys, linetype=:steppost, label = "Demande", linewidth = 3)
