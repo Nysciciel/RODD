@@ -1,0 +1,41 @@
+ NbParcelles=40;
+ T=10;
+ SURF=1;
+ lmax=2;
+ amax=2;
+ C=[[1],[2]]; # 1=riz, 2=haricot
+ Demande=[[1200,0,1200,0,1200,0,1200,0,1200,0],[0,400,0,400,0,400,0,400,0,400]];
+  
+   Sommets=[
+ Sommet(2,0,0),
+ Sommet(1,0,0),
+ Sommet(2,1,1),
+ Sommet(2,2,1),
+ Sommet(1,1,1),
+ Sommet(1,2,1),
+ Sommet(2,1,2),
+ Sommet(2,2,2),
+ Sommet(1,1,2),
+ Sommet(1,2,2)
+ ];
+ 
+ Arcs=[
+ Arc(Sommet(2,0,0),Sommet(2,0,0),0),
+ Arc(Sommet(2,0,0),Sommet(2,1,1),120),
+ Arc(Sommet(2,0,0),Sommet(2,1,2),90),
+  Arc(Sommet(1,0,0),Sommet(2,0,0),0),
+ Arc(Sommet(1,0,0),Sommet(1,1,1),72),
+  Arc(Sommet(1,0,0),Sommet(1,1,2),54),
+ Arc(Sommet(2,1,1),Sommet(1,0,0),0),
+  Arc(Sommet(2,1,1),Sommet(2,2,2),65),
+ Arc(Sommet(2,2,1),Sommet(1,0,0),0),
+  Arc(Sommet(1,1,1),Sommet(1,0,0),0),
+ Arc(Sommet(1,1,1),Sommet(1,2,2),39),
+  Arc(Sommet(1,2,1),Sommet(1,0,0),0),
+ Arc(Sommet(2,1,2),Sommet(1,0,0),0),
+  Arc(Sommet(2,1,2),Sommet(2,2,1),90),
+ Arc(Sommet(2,2,2),Sommet(1,0,0),0),
+ Arc(Sommet(1,1,2),Sommet(1,0,0),0),
+ Arc(Sommet(1,1,2),Sommet(1,2,1),54),
+ Arc(Sommet(1,2,2),Sommet(1,0,0),0),
+ ];
