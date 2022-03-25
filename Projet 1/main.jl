@@ -41,7 +41,7 @@ function solve_model(m,n,proba::Vector{Vector{Vector{Float64}}}, c::Vector{Vecto
     optimize!(model)
 
     resolution_time = round(solve_time(model), digits=2)
-    noeuds = 0#node_count(model)
+    noeuds = node_count(model)
 
     if verbose
         println("resolution_time = ", resolution_time)
