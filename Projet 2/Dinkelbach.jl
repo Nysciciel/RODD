@@ -14,6 +14,7 @@ mutable struct Instance
 		if alea
 			c = rand(1:round(Int, sqrt(n*m)), (n,m))
 		else
+			@assert(n==m==10)
 			c = [7 3 10 10 2 8 6 4 5 5;
 				7 7 10 5 2 8 6 3 9 9;
 				7 3 4 6 3 2 4 9 7 8;
@@ -25,7 +26,7 @@ mutable struct Instance
 				9 6 5 4 5 6 8 9 6 6;
 				8 8 7 7 3 5 8 3 9 9]
 		end
-		new(Amin, Amax, B, n, m, n*c)
+		new(Amin, Amax, B, n, m, 10*c)
 	end
 end
 mutable struct Solution
@@ -109,7 +110,7 @@ function run(instance::Instance)
 		println("nb parcelles : ", sum(sol.parcelles))
 		affichage(sol.parcelles)
 	else
-		print("No solution")
+		println("No solution")
 	end
 	return sol
 end
@@ -123,9 +124,9 @@ function instances1_3()
 		inst = instances[i]
 		println(inst)
 		sol = run(inst)
-		rows[i] = [string(inst.Amin) * ", " * string(inst.Amax) * ", " * string(inst.B), string(sol.res_time), string(sol.nb_nodes), string(sol.nb_it), string(sol.DMPPV)]
+		rows[i] = [string(inst.n) * "\$\\times\$" * string(inst.m), string(inst.Amin) * ", " * string(inst.Amax) * ", " * string(inst.B), string(sol.res_time), string(sol.nb_nodes), string(sol.nb_it), string(sol.DMPPV)]
 	end
-	titles = ["\$A_{min}, A_{max}, B\$", "Temps(s)", "Noeuds", "Itérations", "DMPPV"]
+	titles = ["Taille", "\$A_{min}, A_{max}, B\$", "Temps(s)", "Noeuds", "Itérations", "DMPPV"]
 	write_table_tex("instances1-3", "Résultats obtenus sur les 3 instances", titles, rows)
 end
 
@@ -134,12 +135,14 @@ end
 
 function instances_alea(n::Int=15)
 	instances = Instance[]
-	for dim in 5:n
-		A = rand(1:100)
-		Amin = round(Int, dim^2*rand(1:A)/100)
-		Amax = round(Int, dim^2*rand(A:100)/100)
-		B = round(Int, dim^2*30*A/100)
-		push!(instances, Instance(Amin, Amax, B, dim, dim, alea=true))
+	for dim in 10:n
+		for _ in 1:5
+			A = rand(1:100)
+			Amin = round(Int, dim^2*rand(1:A)/100)
+			Amax = round(Int, dim^2*rand(A:100)/100)
+			B = round(Int, dim^2*20*A/100)
+			push!(instances, Instance(Amin, Amax, B, dim, dim, alea=true))
+		end
 	end
 	
 	rows = Vector{Vector{String}}(undef, length(instances))
@@ -147,11 +150,11 @@ function instances_alea(n::Int=15)
 		inst = instances[i]
 		println(inst)
 		sol = run(inst)
-		rows[i] = [string(inst.Amin) * ", " * string(inst.Amax) * ", " * string(inst.B), string(sol.res_time), string(sol.nb_nodes), string(sol.nb_it), string(sol.DMPPV)]
+		rows[i] = [string(inst.n) * "\$\\times\$" * string(inst.m), string(inst.Amin) * ", " * string(inst.Amax) * ", " * string(inst.B), string(sol.res_time), string(sol.nb_nodes), string(sol.nb_it), string(sol.DMPPV)]
 	end
-	titles = ["\$A_{min}, A_{max}, B\$", "Temps(s)", "Noeuds", "Itérations", "DMPPV"]
-	write_table_tex("instances1-3", "Résultats obtenus sur les 3 instances", titles, rows)
+	titles = ["Taille", "\$A_{min}, A_{max}, B\$", "Temps(s)", "Noeuds", "Itérations", "DMPPV"]
+	write_table_tex("instancesAlea", "Résultats obtenus sur les instances générées aléatoirement", titles, rows)
 end
 
 
-instances_alea()
+instances_alea(16)	
