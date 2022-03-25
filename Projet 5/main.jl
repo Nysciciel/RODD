@@ -7,17 +7,17 @@ using Random
 
 
 function rolling(;
-    returns::String="cost", 
     verbose::Bool=false, 
     T::Int = 12, 
     M::Int = 4, 
     E::Int = 3, 
-    f::Vector{Int64} = [10,30,60,90], 
-    e::Vector{Int64} = [8,6,4,2], 
+    f::Vector{Float64} = [10.,30.,60.,90.], 
+    e::Vector{Float64} = [8.,6.,4.,2.], 
     R::Int = 2, 
-    seed::Int = 0)
+    seed::Union{UInt64, Nothing} = UInt(0))
 
 
+    seed = seed==nothing ? rand(UInt) : seed
     Random.seed!(seed)
     d = [rand(20:70) for _ in 1:T]
 
@@ -61,23 +61,52 @@ function rolling(;
             append!(xs,NaN)
 
         end
-
-        scatter(p, xs,  ys, linetype=:steppost, label = "Demande", linewidth = 3)
-    else
-
-        if returns == "cost"
-            return objective_value(model)
-        elseif returns == "carbon"
-            return sum(e[m]*value(x[t,m]) for m in 1:M, t in 1:T)/T
-        else
-            return
-        end
+        p = scatter(p, xs,  ys, linetype=:steppost, label = "Demande", linewidth = 3, xlabel="Time", ylabel="Production")
+        savefig(p, "plot.pdf")
+        display(p)
     end
-
+    return [objective_value(model), sum(e[m]*value(x[t,m]) for m in 1:M, t in 1:T)/T]
 end
 
 
-p1 = plot(1:12, [rolling(R=R) for R in 1:12], label="Cost")
-p2 = plot(1:12, [rolling(R=R, returns="carbon") for R in 1:12], label="Carbon average")
+function graphs(;
+    T::Int = 12,
+    seed::Union{UInt64, Nothing} = UInt(0))
+    seed = seed==nothing ? rand(UInt64) : seed
 
-plot(p1,p2,layout=2)
+    arguments = Dict{Symbol, Any}(:seed=>seed, :T=>T)
+
+    results = Array{Float64}(undef, 2, T)
+    
+    results = cat(results, hcat([rolling(;arguments..., R=R) for R in 1:T]...), dims=3)
+
+    arguments[:E] = 4
+    results = cat(results, hcat([rolling(;arguments..., R=R) for R in 1:T]...), dims=3)
+
+    arguments[:E] = 3
+    arguments[:M] = 5
+    arguments[:f] = [10.,30.,50.,60.,90.]
+    arguments[:e] = [8.,6.,5.,4.,2.]
+    results = cat(results, hcat([rolling(;arguments..., R=R) for R in 1:T]...), dims=3)
+
+    arguments[:M] = 6
+    arguments[:f] = [10.,30.,50.,60.,90.,95.]
+    arguments[:e] = [8.,6.,5.,4.,2.,1.]
+    results = cat(results, hcat([rolling(;arguments..., R=R) for R in 1:T]...), dims=3)
+
+    arguments[:M] = 7
+    arguments[:f] = [1.,10.,30.,50.,60.,90.,95.]
+    arguments[:e] = [9.,8.,6.,5.,4.,2.,1.]
+    results = cat(results, hcat([rolling(;arguments..., R=R) for R in 1:T]...), dims=3)
+
+
+    results = results[:,:,2:end]
+    p1 = plot(1:T, results[1,:,:], linewidth=2, title="Cost", labels=["Base" "E=4" "M=5" "M=6" "M=7"], xticks=1:T, xlabel="R")
+    p2 = plot(1:T, results[2,:,:], linewidth=2, title="Carbon average", legend=false, xticks=1:T, xlabel="R")
+    plot!(size=(80*T,round(Int, 80*T/sqrt(2))))
+    p = plot(p1, p2, layout=2)
+    savefig(p, "plot.pdf")
+    display(p)
+end
+graphs(T=20)
+# rolling()
