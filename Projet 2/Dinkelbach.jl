@@ -62,7 +62,7 @@ function Dinkelbach(lambda_0::Float64, instance::Instance)
 			return Solution(model, round(time()-start, digits=2), nb_nodes, nb_it, round(lambda,digits=2), zeros(Int, (n,m)) )
 		end
 			
-		if objective_value(model) >= -1e-10
+		if abs(objective_value(model)) <= 1e-10
 			return Solution(model, round(time()-start, digits=2), nb_nodes, nb_it, round(lambda,digits=2), round.(value.(model[:x])) )
 		end
 		
@@ -72,7 +72,7 @@ end
 
 function run(instance::Instance)
 	
-	sol = Dinkelbach(50., instance)
+	sol = Dinkelbach(10000., instance)
 	
 	if has_values(sol.model)
 		# print(solution_summary(model, verbose=false))
@@ -98,3 +98,5 @@ for i in 1:length(instances)
 end
 titles = ["\$A_{min}, A_{max}, B\$", "Temps(s)", "Noeuds", "Itérations", "DMPPV"]
 write_table_tex("instances1-3", "Résultats obtenus sur les 3 instances", titles, rows)
+
+# run(Instance(20,21,520))
