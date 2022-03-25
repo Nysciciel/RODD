@@ -14,7 +14,8 @@ function affichage(x,y=zeros(Int,size(x)))
     dic = Dict(1=>"■ ",0=>"□ ",-1=>"\n")
     matrice = (e->dic[e] ).(matrice)
     #fusion des matrices
-    matrice[[CartesianIndex(j,i) for i in 1:10, j in 1:10 if round(x[i,j]*y[i,j])==1]] .= "x "
+    n,m = size(x)
+    matrice[[CartesianIndex(j,i) for i in 1:n, j in 1:m if round(x[i,j]*y[i,j])==1]] .= "x "
     println( prod( matrice) )
 end
 
