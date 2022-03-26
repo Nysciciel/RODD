@@ -14,7 +14,7 @@ h=50
 θ = zeros(h)
 θ[1] = 0.001
 for r in 2:h
-    θ[r] = θ[1]^((h-r)/h-1)
+    θ[r] = θ[1]^((h-r)/(h-1))
 end
 model = Model(CPLEX.Optimizer)
 set_silent(model)
