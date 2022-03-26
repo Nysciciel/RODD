@@ -74,12 +74,13 @@ if has_values(model)
     println("\n")#,"-"^(8*N+3))
     probas = Float64[]
     for k in 1:m
-#         p = prod( ((i ∈ I_2[k]) && (value(x[i])>0) ) ? 0 : (i in I_1[k] ? (1/(2^value(x[i])) : 1)) for i in 1:N)
+        # proba = prod( ((i ∈ I_2[k]) && (value(x[i])>0) ) ? 0 : (i in I_1[k] ? 1/(2^value(x[i])) : 1) for i in 1:N)
         proba = 1
         for i in 1:N
             if (i ∈ I_2[k]) && (value(x[i])>0)
                 proba = 0
-            else
+                break
+            elseif i ∈ I_1[k]
                 proba *= 1/(2^value(x[i]))
             end
         end
