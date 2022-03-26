@@ -12,7 +12,7 @@ I_1 = [ [i for i in 1:N if n[i][k] == 1] for k in 1:m]  #I_1[k] = individus qui 
 
 h=50
 θ = zeros(h)
-θ[1] = 0.001
+θ[1] = 0.0001
 for r in 2:h
     θ[r] = θ[1]^((h-r)/(h-1))
 end
