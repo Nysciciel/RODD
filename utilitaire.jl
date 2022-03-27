@@ -61,7 +61,7 @@ function write_table_tex(output::String, caption::String, titles::Array{String},
             header *= " &"
         end
     end
-    header *= "\\\\\n\t\\hline"
+    header *= "\\\\"
 
     #SUBHEADERS
     subheader = ""
@@ -107,7 +107,7 @@ function write_table_tex(output::String, caption::String, titles::Array{String},
     println(fout, header)
     println(fout, subheader)
     println(fout, subsubheader)
-
+    println(fout, "\\hline")
     id = 1
 
     #CONTENT
