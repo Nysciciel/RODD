@@ -6,19 +6,26 @@ struct Instance
     C::Int
     G::Int
     A::Int
-    T::Int
-    B::Int
-    individu
     h::Int
-    function Instance(alea::Bool, B::Int)
+    B::Int
+    init::Float64
+    individu
+    function Instance(alea::Bool, B::Int, N::Int, T::Int, G::Int)
         if !alea
-            include("DivGenetique_opl.dat")
-            h=50
-        else
-            
+            individu =  [[[2, 1], [1, 1], [2, 1], [2, 1], [1, 2]]],
+                        [[[2, 2], [2, 1], [1, 2], [1, 2], [1, 1]]],
+                        [[[2, 2], [2, 1], [2, 1], [1, 2], [1, 2]]],
+                        [[[2, 2], [1, 1], [1, 2], [2, 2], [2, 2]]],
+                        [[[2, 1], [1, 1], [1, 1], [2, 2], [1, 2]]],
+                        [[[1, 2], [1, 1], [2, 2], [2, 1], [2, 1]]],
+                        [[[1, 1], [1, 1], [2, 2], [1, 1], [1, 1]]],
+                        [[[2, 2], [1, 1], [2, 2], [2, 1], [2, 1]]]
 
+            return new(8, 1, 5, 2, 50, B, 0.0001,  individu)
+        else
+            individu = [[[[rand(1:2),rand(1:2)] for _ in 1:G]] for _ in 1:N]
+            return new(N, 1, G, 2, T, B, 0.0001, individu)
         end
-        new(N, C, G, A, T, B, individu, h)
     end
 end
 
@@ -37,7 +44,6 @@ function run(inst::Instance, verbose::Bool=false)
     C = inst.C
     G = inst.G
     A = inst.A
-    T = inst.T
     B = inst.B
     individu = inst.individu
 
@@ -51,7 +57,7 @@ function run(inst::Instance, verbose::Bool=false)
 
     h=inst.h
     θ = zeros(h)
-    θ[1] = 0.0001
+    θ[1] = inst.init
     for r in 2:h
         θ[r] = θ[1]^((h-r)/(h-1))
     end
@@ -71,7 +77,7 @@ function run(inst::Instance, verbose::Bool=false)
 
     optimize!(model)
     probas = Float64[]
-    if has_values(model) && verbose
+    if has_values(model)
         println()
         println()
         println()
@@ -134,10 +140,10 @@ function run(inst::Instance, verbose::Bool=false)
             end
         end
         println("\nEspérance du nombre d'allèles perdus : ", sum(probas))
-    elseif verbose
+    else
         println("No solution")
     end
-    return solution(round(time()-start), node_count(model), probas, sum(probas), objective_value(model))
+    return solution(round(time()-start), node_count(model), probas, round(sum(probas), digits=6), round(objective_value(model), digits=6))
     
     
 end
@@ -145,7 +151,7 @@ end
 
 
 function instances_alea()
-	instances = Instance[Instance(false, 3), Instance(false, 2)]
+	instances = Instance[Instance(false, 3, 0, 0, 0), Instance(false, 2, 0, 0, 0), Instance(true, 3, 8, 50, 5)]
 	
 	rows = Vector{Vector{String}}(undef, length(instances))
 	for i in 1:length(instances)
