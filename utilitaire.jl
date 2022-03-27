@@ -37,24 +37,17 @@ function write_table_tex(output::String, caption::String, titles::Array{String},
     fout = open(output * ".tex", "w")
 
     println(fout, raw"""\documentclass[main.tex]{subfiles}
-\newmargin{2cm}{2cm}
-\setlength{\voffset}{-1.5cm}
 \begin{document}
 \thispagestyle{empty}
 """)
 
     #HEADER OF TABLE
     header = raw"""
-\begin{table}
+\begin{table}[h]
     \centering
-    \caption{"""
-    header *= caption
-    header *= raw"""
-}
-    \begin{tabular}{
-    """
+    \begin{tabular}{"""
 
-    header *= alignment * "}\n\\hline\t\n\t"
+    header *= alignment * "}\n\t\\hline\t\n\t"
 
     for i in 1:length(titles)
         if num_col_titles[i] > 1
@@ -68,11 +61,12 @@ function write_table_tex(output::String, caption::String, titles::Array{String},
             header *= " &"
         end
     end
-    header *= "\\\\\n\t\\hline\n"
+    header *= "\\\\\n\t\\hline"
 
     #SUBHEADERS
-    subheader = "\n\t"
+    subheader = ""
     if length(subtitles) > 0
+        subheader *= "\t"
         for i in 1:length(subtitles)
             if num_col_sub[i] > 1
                 subheader *= "\\multicolumn{" * string(num_col_sub[i]) * "}{c}{"
@@ -85,12 +79,13 @@ function write_table_tex(output::String, caption::String, titles::Array{String},
                 subheader *= " &"
             end
         end
-        subheader *= "\\\\\n\t"
+        subheader *= "\\\\"
     end
 
     #SUBSUBHEADERS
-    subsubheader = "\n\t"
+    subsubheader = ""
     if length(subsubtitles) > 0
+        subsubheader *= "\t"
         for i in 1:length(subsubtitles)
             subsubheader *= subsubtitles[i]
             
@@ -98,16 +93,18 @@ function write_table_tex(output::String, caption::String, titles::Array{String},
                 subsubheader *= " &"
             end
         end
-        subsubheader *= "\\\\\n\t\\hline\n"
+        subsubheader *= "\\\\\n\t\\hline"
     end
 
     #FOOTER OF TABLES
     footer = raw"""
-    \end{tabular}
+    \end{tabular}\caption{"""
+    footer *= caption
+    footer *= raw"""}
 \end{table}
 """
 
-    print(fout, header)
+    println(fout, header)
     println(fout, subheader)
     println(fout, subsubheader)
 
@@ -115,6 +112,7 @@ function write_table_tex(output::String, caption::String, titles::Array{String},
 
     #CONTENT
     for j in 1:length(rows)
+        print(fout, "\t")
         for i in 1:length(rows[j])
             print(fout, rows[j][i])
             if i < length(rows[j])
