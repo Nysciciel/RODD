@@ -107,7 +107,7 @@ function write_table_tex(output::String, caption::String, titles::Array{String},
     println(fout, header)
     println(fout, subheader)
     println(fout, subsubheader)
-    println(fout, "\\hline")
+    println(fout, "\t\\hline")
     id = 1
 
     #CONTENT
