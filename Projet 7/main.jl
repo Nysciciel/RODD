@@ -1,5 +1,6 @@
 using CPLEX
 using JuMP
+include("../utilitaire.jl")
 
 mutable struct Sommet
     l::Int #âge jachère
@@ -59,4 +60,9 @@ demande = @constraint(model, [k in Cultures, t = 1:T], sum(Arcs[u].rend * x[u,t,
 
 @objective(model, Min, sum(x[u,1,p] for u in initArcs, p in 1:P))
 
+
+
 optimize!(model)
+row = [string(round(solve_time(model), digits=6)), string(node_count(model)), string(round(Int,sum(value(model[:x][arc,1,p]) for p in 1:P, arc in initArcs)))]
+titles = ["Temps(s)", "Noeuds", "Parcelles"]
+write_table_tex("res", "Résultats pour l'instance Test 2 cultures", titles, [row])
