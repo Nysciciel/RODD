@@ -14,8 +14,6 @@ mutable struct Arc
     i::Sommet #initial
     f::Sommet #final
     rend::Int #rendement
-    
-    
 end
 function Base.:(==)(x::Arc, y::Arc)
     x.i == y.i && x.f == y.f && x.rend == y.rend
@@ -60,7 +58,5 @@ demande = @constraint(model, [k in Cultures, t = 1:T], sum(Arcs[u].rend * x[u,t,
 
 
 @objective(model, Min, sum(x[u,1,p] for u in initArcs, p in 1:P))
-
-
 
 optimize!(model)

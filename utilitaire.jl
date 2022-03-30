@@ -2,21 +2,21 @@ function neighbours(i::Int, j::Int, n::Int, m::Int)
     """
     Renvoie les cases voisines de (i,j) elle même incluse
     """
-    i_m = max(1, i-1)
-    j_m = max(1, j-1)
-    i_p = min(n, i+1)
-    j_p = min(m, j+1)
-    return [(k,l) for k in i_m:i_p for l in j_m:j_p]
+    i_m = max(1, i - 1)
+    j_m = max(1, j - 1)
+    i_p = min(n, i + 1)
+    j_p = min(m, j + 1)
+    return [(k, l) for k in i_m:i_p for l in j_m:j_p]
 end
 
-function affichage(x,y=zeros(Int,size(x)))
-    matrice = [Int.(round.(x)) .-ones(Int,size(x,1),1) ]'
-    dic = Dict(1=>"■ ",0=>"□ ",-1=>"\n")
-    matrice = (e->dic[e] ).(matrice)
+function affichage(x, y=zeros(Int, size(x)))
+    matrice = [Int.(round.(x)) .-ones(Int, size(x, 1), 1)]'
+    dic = Dict(1 => "■ ", 0 => "□ ", -1 => "\n")
+    matrice = (e -> dic[e]).(matrice)
     #fusion des matrices
-    n,m = size(x)
-    matrice[[CartesianIndex(j,i) for i in 1:n, j in 1:m if round(x[i,j]*y[i,j])==1]] .= "x "
-    println( prod( matrice) )
+    n, m = size(x)
+    matrice[[CartesianIndex(j, i) for i in 1:n, j in 1:m if round(x[i, j] * y[i, j]) == 1]] .= "x "
+    println(prod(matrice))
 end
 
 """
@@ -30,16 +30,19 @@ Input:
         - num_col_sub = number of cols for each subtitle
 """
 function write_table_tex(output::String, caption::String, titles::Array{String}, rows::Vector{Vector{String}};
-    subtitles::Array{String}=String[], subsubtitles::Array{String}=String[], 
-    num_col_titles::Array{Int}=ones(Int,length(titles)), num_col_sub::Array{Int}=ones(Int,length(subtitles)),
-    alignment::String="c"^sum(num_col_titles), lines::Array{String}=fill("",length(rows)), maxRawsPerPage::Int=50 )
+    subtitles::Array{String}=String[], subsubtitles::Array{String}=String[],
+    num_col_titles::Array{Int}=ones(Int, length(titles)), num_col_sub::Array{Int}=ones(Int, length(subtitles)),
+    alignment::String="c"^sum(num_col_titles), lines::Array{String}=fill("", length(rows)), maxRawsPerPage::Int=50)
 
     fout = open(output * ".tex", "w")
 
-    println(fout, raw"""\documentclass[main.tex]{subfiles}
+    println(
+        fout,
+        raw"""\documentclass[main.tex]{subfiles}
 \begin{document}
 \thispagestyle{empty}
-""")
+"""
+    )
 
     #HEADER OF TABLE
     header = raw"""
@@ -88,7 +91,7 @@ function write_table_tex(output::String, caption::String, titles::Array{String},
         subsubheader *= "\t"
         for i in 1:length(subsubtitles)
             subsubheader *= subsubtitles[i]
-            
+
             if i < length(subsubtitles)
                 subsubheader *= " &"
             end
@@ -119,10 +122,10 @@ function write_table_tex(output::String, caption::String, titles::Array{String},
                 print(fout, " &")
             end
         end
-        
+
         println(fout, "\\\\" * lines[j])
-        
-        
+
+
         #If we need to start a new page
         if rem(id, maxRawsPerPage) == 0
             println(fout, footer, "\\newpage\n\\thispagestyle{empty}")
@@ -132,7 +135,7 @@ function write_table_tex(output::String, caption::String, titles::Array{String},
         end
         id += 1
     end
-    
+
     println(fout, footer)
     println(fout, "\\end{document}")
     close(fout)
